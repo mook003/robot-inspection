@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "robot-accuracy"
+version = "0.0.1"
+description = "AP/RP расчет точности робота по данным FARO"
+readme = "README.md"
+authors = [{name = "Your Org"}]
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+"numpy>=1.24",
+"pandas>=2.0",
+]
+
+
+[project.optional-dependencies]
+excel = ["openpyxl>=3.1"]
+
+
+[project.scripts]
+robot-accuracy = "robot_accuracy.cli:main"
+
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+
+[tool.setuptools.packages.find]
+where = ["src"]

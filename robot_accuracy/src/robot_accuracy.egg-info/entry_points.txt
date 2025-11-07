@@ -1,0 +1,2 @@
+[console_scripts]
+robot-accuracy = robot_accuracy.cli:main

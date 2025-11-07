@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: robot-accuracy
+Version: 0.1.0
+Summary: AP/RP расчет точности робота по данным FARO
+Author: Your Org
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=2.0
+Provides-Extra: excel
+Requires-Dist: openpyxl>=3.1; extra == "excel"
+Dynamic: license-file
