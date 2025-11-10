@@ -7,14 +7,14 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class TransformRT:
     """
-    Жёсткое преобразование трекер -> база робота:
+    Жёсткое преобразование: трекер -> база робота
         p_R = R @ p_T + t
     """
     R: np.ndarray  # (3,3)
     t: np.ndarray  # (3,)
 
     def apply(self, pts: np.ndarray) -> np.ndarray:
-        pts = np.asarray(pts, float)
+        pts = np.asarray(pts, dtype=float)
         return (self.R @ pts.T).T + self.t.reshape(1, 3)
 
     def invert(self) -> "TransformRT":
@@ -30,7 +30,7 @@ class TransformRT:
 
 def estimate_rt_svd(P_R: np.ndarray, P_T: np.ndarray) -> tuple[TransformRT, np.ndarray, float, float]:
     """
-    Вычислить T_RT по парам соответствующих точек методом Kabsch (SVD).
+    Оценка R,t методом Kabsch (SVD).
 
     Вход
     ----
@@ -39,52 +39,56 @@ def estimate_rt_svd(P_R: np.ndarray, P_T: np.ndarray) -> tuple[TransformRT, np.n
 
     Выход
     -----
-    T     : TransformRT с det(R)=+1
-    resid : (N,) евклидовы остатки, мм
-    max_r : float, максимальный остаток, мм
-    rms_r : float, rms-остаток, мм
+    T     : TransformRT с det(R)=+1, такое что p_R = R p_T + t
+    resid : (N,) евклидовы остатки (в тех же единицах, что вход)
+    max_r : максимальный остаток
+    rms_r : RMS-остаток
     """
-    A = np.asarray(P_T, dtype=float)
-    B = np.asarray(P_R, dtype=float)
+    P_T = np.asarray(P_T, dtype=float)
+    P_R = np.asarray(P_R, dtype=float)
 
-    if A.shape != B.shape or A.ndim != 2 or A.shape[1] != 3:
+    if P_T.shape != P_R.shape or P_T.ndim != 2 or P_T.shape[1] != 3:
         raise ValueError("P_R и P_T должны иметь одинаковую форму (N,3)")
-    N = A.shape[0]
-    if N < 4:
-        raise ValueError("Нужно минимум 4 точки")
+    N = P_T.shape[0]
+    if N < 3:
+        raise ValueError("Нужно минимум 3 соответствующие точки")
 
-    if not np.all(np.isfinite(A)) or not np.all(np.isfinite(B)):
-        raise ValueError("Обнаружены нечисловые значения в входных данных")
+    if not np.all(np.isfinite(P_T)) or not np.all(np.isfinite(P_R)):
+        raise ValueError("Обнаружены NaN/Inf во входных данных")
 
-    a_mean = A.mean(axis=0)
-    b_mean = B.mean(axis=0)
-    Ac = A - a_mean
-    Bc = B - b_mean
+    # Правильное центрирование
+    P_T_mean = P_T.mean(axis=0)
+    P_R_mean = P_R.mean(axis=0)
+    X = P_T - P_T_mean
+    Y = P_R - P_R_mean
 
-    # Проверка вырожденности (хотя бы ранга 3 для устойчивости)
-    if np.linalg.matrix_rank(Ac) < 3 or np.linalg.matrix_rank(Bc) < 3:
-        raise ValueError("Опорные точки вырождены (почти коллинеарны/копланарны)")
+    # Минимальное требование: не коллинеарность (ранг >= 2)
+    if np.linalg.matrix_rank(X) < 2 or np.linalg.matrix_rank(Y) < 2:
+        raise ValueError("Опорные точки вырождены (коллинеарны или почти)")
 
-    H = Ac.T @ Bc  # (3x3)
+    # Кросс-ковариация и SVD
+    H = X.T @ Y  # (3x3)
     U, S, Vt = np.linalg.svd(H)
     R = Vt.T @ U.T
 
-    # Коррекция отражения
+    # Дет-фикс против отражения
     if np.linalg.det(R) < 0:
         Vt[-1, :] *= -1.0
         R = Vt.T @ U.T
 
-    t = b_mean - R @ a_mean
+    t = P_R_mean - R @ P_T_mean
 
-    mapped = (R @ A.T).T + t.reshape(1, 3)
-    resid = np.linalg.norm(mapped - B, axis=1)
+    T = TransformRT(R=R, t=t)
+
+    mapped = T.apply(P_T)
+    resid = np.linalg.norm(mapped - P_R, axis=1)
     max_r = float(resid.max())
     rms_r = float(np.sqrt((resid ** 2).mean()))
 
-    return TransformRT(R=R, t=t), resid, max_r, rms_r
+    return T, resid, max_r, rms_r
 
 
-# Утилиты без датакласса (на случай прямого использования)
+# Утилиты без датакласса
 def apply_rt(R: np.ndarray, t: np.ndarray, pts: np.ndarray) -> np.ndarray:
     pts = np.asarray(pts, float)
     return (np.asarray(R, float) @ pts.T).T + np.asarray(t, float).reshape(1, 3)
