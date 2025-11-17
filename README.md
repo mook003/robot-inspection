@@ -61,7 +61,7 @@ pip install -e robot_accuracy[excel]
 
 Форматы CSV:
 
-**Опорные точки (база робота и трекер)**
+**Опорные точки (база робота и трекер, `--ref-robot` & `--ref-tracker`)**
 
 ```csv
 name,x,y,z
@@ -71,7 +71,7 @@ C,0,100,0
 D,0,0,100
 ```
 
-**Реальные координаты позиций (ground truth)**
+**Реальные координаты позиций (ground truth, `--prog`)**
 
 ```csv
 position,x,y,z
@@ -80,7 +80,7 @@ P2,50,10,10
 ...
 ```
 
-**Измерения (в системе трекера)**
+**Измерения (в системе трекера, `--meas`)**
 
 ```csv
 cycle,position,x,y,z
@@ -91,32 +91,17 @@ cycle,position,x,y,z
 
 >`note:` Ожидается одинаковое количество циклов (например, 30) на каждую позицию.
 
-### 2) Запуск через установленный пакет
+### 2) Запуск без установки (через `PYTHONPATH`)
 
 ```bash
-robot-accuracy \
-  --ref-robot data/ref_robot.csv \
-  --ref-tracker data/ref_tracker.csv \
-  --real data/real_positions.csv \
-  --prog data/program.csv \
-  --meas data/measurements.csv \
-  --cycles 30 \
-  --max-resid 0.1 \
-  --out results.xlsx
-```
-
-### 3) Запуск без установки (через `PYTHONPATH`)
-
-```bash
-PYTHONPATH=robot_accuracy/src python -m robot_accuracy \
-  --ref-robot data/ref_robot.csv \
-  --ref-tracker data/ref_tracker.csv \
-  --real data/real_positions.csv \
-  --prog data/program.csv \
-  --meas data/measurements.csv \
-  --cycles 30 \
-  --max-resid 0.1 \
-  --out results.xlsx
+PYTHONPATH=robot_accuracy/src python -m robot_accuracy
+   --ref-robot data/ref_robot.csv
+   --ref-tracker data/ref_tracker.csv
+   --prog data/program.csv
+   --meas data/measurements.csv
+   --cycles 30
+   --max-resid 0.1
+   --out results.xlsx
 ```
 
 `--dry-run` выведет сводку без сохранения файлов.
