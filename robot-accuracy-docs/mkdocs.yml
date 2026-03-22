@@ -1,0 +1,65 @@
+site_name: robot-accuracy
+site_description: AP/RP accuracy metrics for industrial robots using tracker measurements
+site_author: mook003
+site_url: https://mook003.github.io/robot-inspection/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/installation.md
+    - getting-started/quickstart.md
+    - getting-started/data-format.md
+  - Reference:
+    - reference/pipeline.md
+    - reference/metrics.md
+    - reference/cli.md
+  - API:
+    - api/transform.md
+    - api/io.md
+    - api/metrics.md
+    - api/report.md
